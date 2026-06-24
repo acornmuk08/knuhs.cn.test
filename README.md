@@ -2,8 +2,7 @@
 사대부고 기말 시험대비용 단어 생성기
 
 기본 단어 목록
-     const subjs = [
-        { zh: "我", py: "Wǒ", ko: "나는", target: "나" },
+     { zh: "我", py: "Wǒ", ko: "나는", target: "나" },
         { zh: "你", py: "Nǐ", ko: "너는", target: "너" },
         { zh: "他", py: "Tā", ko: "그는", target: "그" },
         { zh: "哥哥", py: "Gēge", ko: "우리 형은", target: "우리 형" },
@@ -15,7 +14,7 @@
         { zh: "朋友", py: "Péngyou", ko: "내 친구는", target: "내 친구" },
         { zh: "班长", py: "Bānzhǎng", ko: "우리 반 반장은", target: "우리 반 반장" },
         { zh: "老师", py: "Lǎoshī", ko: "우리 선생님은", target: "우리 선생님" }
-    ];
+    
 
     const places = [
         { zh: "商店", py: "shāngdiàn", ko: "마트(상점)" },
