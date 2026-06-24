@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>중어 시험 대비 문제 생성기</title>
+    <style>
+        body {
+            font-family: 'Malgun Gothic', sans-serif;
+            background-color: #f7fafc;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            background-color: #b1f0e7;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 25px rgba(0,0,0,0.05);
+            width: 100%;
+            max-width: 700px;
+            text-align: center;
+        }
+        h1 {
+            color: #1a202c;
+            font-size: 26px;
+            margin-bottom: 5px;
+        }
+        .subtitle {
+            color: #4a5568;
+            font-size: 14px;
+            margin-bottom: 25px;
+            background-color: #edf2f7;
+            padding: 8px;
+            border-radius: 6px;
+            font-weight: bold;
+        }
+        .quiz-box {
+            background-color: #fffea8;
+            padding: 25px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border: 1px solid #e2e8f0;
+        }
+        .hint-container {
+            min-height: 40px;
+            margin-bottom: 15px;
+        }
+        .hint-btn {
+            background-color: #cbd5e1;
+            color: #1e293b;
+            border: none;
+            padding: 6px 14px;
+            font-size: 13px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+            display: inline-block;
+        }
+        .hint-btn:hover {
+            background-color: #94a3b8;
+        }
+        .word-hint {
+            font-size: 14px;
+            color: #c2410c;
+            font-weight: bold;
+            display: none;
+            background-color: #fff7ed;
+            padding: 6px 12px;
+            border-radius: 6px;
+            border: 1px dashed #fdba74;
+        }
+        .chinese-sentence {
+            font-size: 32px;
+            color: #0f172a;
+            font-weight: bold;
+            margin: 5px 0 0 0;
+            letter-spacing: 1px;
+            line-height: 1.5;
+        }
+        .pinyin-sentence {
+            font-size: 16px;
+            color: #64748b;
+            margin: 5px 0 15px 0;
+            font-style: italic;
+        }
+        .grammar-tag {
+            display: inline-block;
+            font-size: 12px;
+            padding: 4px 10px;
+            background-color: #dbeafe;
+            color: #1e40af;
+            border-radius: 4px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 14px;
+            box-sizing: border-box;
+            border: 2px solid #cbd5e1;
+            border-radius: 6px;
+            font-size: 16px;
+            margin-bottom: 15px;
+            transition: border-color 0.3s;
+        }
+        input[type="text"]:focus {
+            border-color: #3b82f6;
+            outline: none;
+        }
+        .action-btn {
+            background-color: #d0abed;
+            color: white;
+            border: none;
+            padding: 14px 25px;
+            font-size: 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            width: 100%;
+            margin-bottom: 10px;
+            font-weight: bold;
+            transition: background-color 0.2s;
+        }
+        .action-btn:hover {
+            background-color: #2563eb;
+        }
+        .next-btn {
+            background-color: #10b981;
+        }
+        .next-btn:hover {
+            background-color: #059669;
+        }
+        .result-box {
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 6px;
+            background-color: #fef08a;
+            text-align: left;
+            display: none;
+            border-left: 5px solid #eab308;
+        }
+        .result-box h3 {
+            margin-top: 0;
+            color: #a16207;
+            font-size: 16px;
+        }
+        .my-answer { margin-bottom: 10px; font-size: 15px; }
+        .correct-answer { font-weight: bold; color: #15803d; font-size: 16px; }
+        .progress {
+            font-size: 13px;
+            color: #475569;
+            text-align: right;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>문제 생성기</h1>
+    <div class="subtitle" id="database-status">교차 결합 엔진 가동 중...</div>
+    <div class="progress" id="quiz-progress">학습 진행률: 0 / 500 완료</div>
+    
+    <div class="quiz-box">
+        <div class="grammar-tag" id="grammar-tag">구조 유형</div>
+        <div class="hint-container">
+            <button class="hint-btn" id="hint-btn" onclick="showHint()">💡 힌트 보기</button>
+            <div class="word-hint" id="word-hint">힌트 내용</div>
+        </div>
+        <div class="chinese-sentence" id="chinese-sentence">중국어 문장</div>
+        <div class="pinyin-sentence" id="pinyin-sentence">pinyin</div>
+    </div>
+
+    <input type="text" id="user-answer" placeholder="한국어 해석을 입력하고 Enter를 누르세요." autocomplete="off">
+    
+    <button onclick="checkAnswer()" class="action-btn" id="submit-btn">정답 확인</button>
+    <button onclick="nextQuestion()" class="action-btn next-btn" id="next-btn" style="display: none;">다음 문제</button>
+
+    <div class="result-box" id="result-box">
+        <h3>💡 정답 및 해석</h3>
+        <p class="my-answer"><strong>내가 쓴 답:</strong> <span id="display-user-answer"></span></p>
+        <p class="correct-answer"><strong>올바른 해석:</strong> <span id="display-correct-answer"></span></p>
+    </div>
+</div>
+
+<script>
+    const subjs = [
+        { zh: "我", py: "Wǒ", ko: "나는", target: "나" },
+        { zh: "你", py: "Nǐ", ko: "너는", target: "너" },
+        { zh: "他", py: "Tā", ko: "그는", target: "그" },
+        { zh: "哥哥", py: "Gēge", ko: "우리 형은", target: "우리 형" },
+        { zh: "姐姐", py: "Jiějie", ko: "우리 누나는", target: "우리 누나" },
+        { zh: "妹妹", py: "Mèimei", ko: "내 여동생은", target: "내 여동생" },
+        { zh: "弟弟", py: "Dìdi", ko: "내 남동생은", target: "내 남동생" },
+        { zh: "妈妈", py: "Māma", ko: "우리 엄마는", target: "우리 엄마" },
+        { zh: "爸爸", py: "Bàba", ko: "우리 아빠는", target: "우리 아빠" },
+        { zh: "朋友", py: "Péngyou", ko: "내 친구는", target: "내 친구" },
+        { zh: "班长", py: "Bānzhǎng", ko: "우리 반 반장은", target: "우리 반 반장" },
+        { zh: "老师", py: "Lǎoshī", ko: "우리 선생님은", target: "우리 선생님" }
+    ];
+
+    const places = [
+        { zh: "商店", py: "shāngdiàn", ko: "마트(상점)" },
+        { zh: "学校", py: "xuéxiào", ko: "학교" },
+        { zh: "医院", py: "yīyuàn", ko: "병원" },
+        { zh: "咖啡店", py: "kāfēidiàn", ko: "카페" },
+        { zh: "家", py: "jiā", ko: "집" }
+    ];
+
+    const foods = [
+        { zh: "麻辣烫", py: "málàtàng", ko: "마라탕" },
+        { zh: "面包", py: "miànbāo", ko: "빵" },
+        { zh: "菜", py: "cài", ko: "요리" }
+    ];
+
+    const drinks = [
+        { zh: "咖啡", py: "kāfēi", ko: "커피" },
+        { zh: "牛奶", py: "niúnǎi", ko: "우유" },
+        { zh: "红茶", py: "hóngchá", ko: "홍차" }
+    ];
+
+    const adjs = [
+        { zh: "困", py: "kùn", ko: "졸려" },
+        { zh: "累", py: "lèi", ko: "피곤해" },
+        { zh: "饿", py: "è", ko: "배고파" },
+        { zh: "气", py: "qì", ko: "화나" }
+    ];
+
+    const statusAdjs = [
+        { zh: "幸福", py: "xìngfú", ko: "행복하다" },
+        { zh: "高兴", py: "gāoxìng", ko: "기쁘다" },
+        { zh: "舒服", py: "shūfu", ko: "편안하다" },
+        { zh: "难过", py: "nánguò", ko: "슬프다" },
+        { zh: "聪明", py: "cōngmíng", ko: "똑똑하다" }
+    ];
+
+    let finalDataset = [];
+
+    function generate500Questions() {
+        // T1: 昨天去 [장소] 了
+        subjs.forEach(s => {
+            places.forEach(p => {
+                finalDataset.push({
+                    type: "과거 완료(了)", word: "昨天 (어제)",
+                    sentence: `${s.zh}昨天去${p.zh}了。`,
+                    pinyin: `${s.py} zuótiān qù ${p.py} le.`, // 수정됨: p.zh -> p.py
+                    translation: `${s.ko} 어제 ${p.ko}에 갔다.`
+                });
+            });
+        });
+
+        // T2: 每天都吃 [음식]
+        subjs.forEach(s => {
+            foods.forEach(f => {
+                finalDataset.push({
+                    type: "부사(每...都)", word: "每天 (매일)",
+                    sentence: `${s.zh}每天都吃${f.zh}。`,
+                    pinyin: `${s.py} měitiān dōu chī ${f.py}.`, // 수정됨: f.zh -> f.py
+                    translation: `${s.ko} 매일 ${f.ko}을(를) 먹는다.`
+                });
+            });
+        });
+
+        // T3: 每天都喝 [음료]
+        subjs.forEach(s => {
+            drinks.forEach(d => {
+                finalDataset.push({
+                    type: "부사(每...都)", word: "都 (모두/다)",
+                    sentence: `${s.zh}每天都喝${d.zh}。`,
+                    pinyin: `${s.py} měitiān dōu hē ${d.py}.`, // 수정됨: d.zh -> d.py
+                    translation: `${s.ko} 매일 ${d.ko}을(를) 마신다.`
+                });
+            });
+        });
+
+        // T4: 상태보어 死了
+        subjs.forEach(s => {
+            adjs.forEach(a => {
+                finalDataset.push({
+                    type: "상태 보어(死了)", word: "死了 (~해 죽겠다)",
+                    sentence: `${s.zh}${a.zh}死了。`,
+                    pinyin: `${s.py} ${a.py} sǐ le.`,
+                    translation: `${s.ko} ${a.ko} 죽겠다.`
+                });
+            });
+        });
+
+        // T5: 주말마다 먹는걸/마시는걸 좋아한다
+        subjs.forEach(s => {
+            foods.concat(drinks).forEach(item => {
+                let action = foods.includes(item) ? "吃" : "喝";
+                let actionPy = foods.includes(item) ? "chī" : "hē"; // 병음 로직 추가
+                let actionKo = foods.includes(item) ? "먹는 걸" : "마시는 걸";
+                finalDataset.push({
+                    type: "심화 복합 동사구", word: "每周末 (주말마다)",
+                    sentence: `${s.zh}很喜欢每周末都${action}${item.zh}。`,
+                    pinyin: `${s.py} hěn xǐhuan měi zhōumò dōu ${actionPy} ${item.py}.`, // 동사 병음 추가 적용
+                    translation: `${s.ko} 주말마다 ${item.ko} ${actionKo} 엄청 좋아한다.`
+                });
+            });
+        });
+
+        // T6: ~에서 커피를 마시거나 중국어를 공부하고 있다
+        subjs.forEach(s => {
+            places.forEach(p => {
+                finalDataset.push({
+                    type: "전치사구(在)", word: "在 (~에서)",
+                    sentence: `${s.zh}在${p.zh}喝咖啡。`,
+                    pinyin: `${s.py} zài ${p.py} hē kāfēi.`, // 수정됨: p.zh -> p.py
+                    translation: `${s.ko} ${p.ko}에서 커피를 마시고 있다.`
+                });
+                finalDataset.push({
+                    type: "전치사구(在)", word: "学习 (공부하다)",
+                    sentence: `${s.zh}在${p.zh}学习汉语。`,
+                    pinyin: `${s.py} zài ${p.py} xuéxí hànyǔ.`, // 수정됨: p.zh -> p.py
+                    translation: `${s.ko} ${p.ko}에서 중국어를 공부하고 있다.`
+                });
+            });
+        });
+
+        // T7: 부사 강조 정말로 ~하다
+        subjs.forEach(s => {
+            statusAdjs.forEach(st => {
+                finalDataset.push({
+                    type: "부사 강조(真的)", word: "真的 (정말로)",
+                    sentence: `${s.zh}今天真的很${st.zh}。`,
+                    pinyin: `${s.py} jīntiān zhēnde hěn ${st.py}.`,
+                    translation: `${s.ko} 오늘 정말 ${st.ko}.`
+                });
+            });
+        });
+
+        // T8: 정반의문문 V不V
+        subjs.forEach(s => {
+            places.forEach(p => {
+                finalDataset.push({
+                    type: "정반의문문(去不去)", word: "去不去 (가니 안가니)",
+                    sentence: `${s.zh}去不去${p.zh}？`,
+                    pinyin: `${s.py} qù bu qù ${p.py}?`, // 수정됨: p.zh -> p.py
+                    translation: `${s.ko} ${p.ko}에 가니 안 가니?`
+                });
+            });
+        });
+
+        // T9: 전치사 别跟 금지구문
+        subjs.forEach(s => {
+            finalDataset.push({
+                type: "부정 명령(别)", word: "别跟我 (~하지 마)",
+                sentence: `别跟${s.zh}生气。`,
+                pinyin: `Bié gēn ${s.py.toLowerCase()} shēngqì.`, // 코드 찌꺼기 완벽 제거
+                translation: `${s.target}한테 화내지 마.`
+            });
+        });
+
+        // T10: 최상급 구조
+        subjs.forEach(s => {
+            finalDataset.push({
+                type: "최상급(最)", word: "个子最高 (키가 제일 큰)",
+                sentence: `${s.zh}是我们班里个子最高的。`,
+                pinyin: `${s.py} shì wǒmen bān lǐ gèzi zuì gāo de.`,
+                translation: `${s.ko} 우리 반에서 키가 제일 크다.`
+            });
+            finalDataset.push({
+                type: "최상급(最)", word: "最聪明 (가장 똑똑한)",
+                sentence: `${s.zh}是我们班里最聪明的。`,
+                pinyin: `${s.py} shì wǒmen bān lǐ zuì cōngmíng de.`,
+                translation: `${s.ko} 우리 반에서 가장 똑똑하다.`
+            });
+        });
+
+        // T11: 부족한 어기조사 구문 추가
+        subjs.forEach(s => {
+            finalDataset.push({
+                type: "전치사구(为)", word: "担心 (걱정하다)",
+                sentence: `${s.zh}每天为我担心。`,
+                pinyin: `${s.py} měitiān wèi wǒ dānxīn.`,
+                translation: `${s.ko} 항상 나를 걱정하신다.`
+            });
+        });
+
+        // 섞고 정확히 500개 자르기
+        finalDataset.sort(() => Math.random() - 0.5);
+        finalDataset = finalDataset.slice(0, 500);
+    }
+
+    let currentQuiz = {};
+    let solvedCount = 0;
+
+    function nextQuestion() {
+        if (solvedCount >= 500) {
+            alert("축하합니다! 고유 문제 500개를 모두 완독하셨습니다!");
+            return;
+        }
+
+        document.getElementById("result-box").style.display = "none";
+        document.getElementById("user-answer").value = "";
+        document.getElementById("user-answer").disabled = false;
+        document.getElementById("submit-btn").style.display = "block";
+        document.getElementById("next-btn").style.display = "none";
+
+        document.getElementById("word-hint").style.display = "none";
+        document.getElementById("hint-btn").style.display = "inline-block";
+
+        currentQuiz = finalDataset[solvedCount];
+
+        document.getElementById("grammar-tag").innerText = "📌 문법 구조: " + currentQuiz.type;
+        document.getElementById("word-hint").innerText = "🎯 힌트 단어: " + currentQuiz.word;
+        document.getElementById("chinese-sentence").innerText = currentQuiz.sentence;
+        document.getElementById("pinyin-sentence").innerText = currentQuiz.pinyin;
+        
+        document.getElementById("user-answer").focus();
+    }
+
+    function showHint() {
+        document.getElementById("hint-btn").style.display = "none";
+        document.getElementById("word-hint").style.display = "inline-block";
+    }
+
+    function checkAnswer() {
+        const userAnswer = document.getElementById("user-answer").value.trim();
+        if(!userAnswer) {
+            alert("해석을 작성해주세요!");
+            return;
+        }
+
+        document.getElementById("display-user-answer").innerText = userAnswer;
+        document.getElementById("display-correct-answer").innerText = currentQuiz.translation;
+        document.getElementById("result-box").style.display = "block";
+
+        showHint();
+
+        document.getElementById("user-answer").disabled = true;
+        document.getElementById("submit-btn").style.display = "none";
+        document.getElementById("next-btn").style.display = "block";
+
+        solvedCount++;
+        document.getElementById("quiz-progress").innerText = "학습 진행률: " + solvedCount + " / 500 완료";
+    }
+
+    document.getElementById("user-answer").addEventListener("keyup", function(event) {
+        if (event.key === "Enter") {
+            if(document.getElementById("submit-btn").style.display !== "none") {
+                checkAnswer();
+            } else {
+                nextQuestion();
+            }
+        }
+    });
+
+    window.onload = function() {
+        generate500Questions();
+        document.getElementById("database-status").innerText = `✅ Made by @acornmuk_ / Support by Gemini`;
+        nextQuestion();
+    };
+</script>
+
+</body>
+</html>
